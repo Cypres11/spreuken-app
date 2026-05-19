@@ -3,11 +3,27 @@ import json
 import csv
 import io
 from datetime import date
-from flask import Flask, render_template, request, redirect, url_for, jsonify, send_file, flash
+import functools
+from flask import Flask, render_template, request, redirect, url_for, jsonify, send_file, flash, Response
 
 app = Flask(__name__)
 app.secret_key = 'rfb-spreuken-2026'
 DB = 'spreuken.db'
+
+
+AUTH_USER = os.environ.get('AUTH_USER', 'familie')
+AUTH_PASS = os.environ.get('AUTH_PASS', 'changeme')
+
+def check_auth(u, p): return u == AUTH_USER and p == AUTH_PASS
+
+def login_required(f):
+    @functools.wraps(f)
+    def decorated(*args, **kwargs):
+        auth = request.authorization
+        if not auth or not check_auth(auth.username, auth.password):
+            return Response('Login vereist.', 401, {'WWW-Authenticate': 'Basic realm="SpreukDB"'})
+        return f(*args, **kwargs)
+    return decorated
 
 def get_db():
     conn = sqlite3.connect(DB)
@@ -58,6 +74,7 @@ def init_db():
             db.executemany('INSERT INTO categorie (naam, beschrijving) VALUES (?,?)', cats)
 
 @app.route('/')
+@login_required
 def index():
     db = get_db()
     q = request.args.get('q', '')
@@ -94,7 +111,8 @@ def index():
         favorieten=favorieten, dagelijks=dagelijks,
         q=q, cat_id=cat_id, only_fav=only_fav, taal=taal)
 
-@app.route('/spreuk/nieuw', methods=['GET', 'POST'])
+@app.route('/spreuk/nieuw'
+@login_required, methods=['GET', 'POST'])
 def nieuw():
     db = get_db()
     if request.method == 'POST':
@@ -126,7 +144,8 @@ def nieuw():
     categorieen = db.execute('SELECT * FROM categorie ORDER BY naam').fetchall()
     return render_template('form.html', spreuk=None, categorieen=categorieen, actie='Toevoegen')
 
-@app.route('/spreuk/<int:sid>/bewerk', methods=['GET', 'POST'])
+@app.route('/spreuk/<int:sid>/bewerk'
+@login_required, methods=['GET', 'POST'])
 def bewerk(sid):
     db = get_db()
     spreuk = db.execute('SELECT * FROM spreuk WHERE id=?', (sid,)).fetchone()
@@ -166,7 +185,8 @@ def bewerk(sid):
     return render_template('form.html', spreuk=spreuk, categorieen=categorieen,
                            actie='Bewerken', tags_str=tags_str)
 
-@app.route('/spreuk/<int:sid>/verwijder', methods=['POST'])
+@app.route('/spreuk/<int:sid>/verwijder'
+@login_required, methods=['POST'])
 def verwijder(sid):
     db = get_db()
     db.execute('DELETE FROM spreuk WHERE id=?', (sid,))
@@ -174,14 +194,16 @@ def verwijder(sid):
     flash('Spreuk verwijderd.', 'info')
     return redirect(url_for('index'))
 
-@app.route('/spreuk/<int:sid>/favoriet', methods=['POST'])
+@app.route('/spreuk/<int:sid>/favoriet'
+@login_required, methods=['POST'])
 def toggle_favoriet(sid):
     db = get_db()
     db.execute('UPDATE spreuk SET favoriet = 1 - favoriet WHERE id=?', (sid,))
     db.commit()
     return jsonify({'ok': True})
 
-@app.route('/categorieen', methods=['GET', 'POST'])
+@app.route('/categorieen'
+@login_required, methods=['GET', 'POST'])
 def categorieen():
     db = get_db()
     if request.method == 'POST':
@@ -199,7 +221,8 @@ def categorieen():
     ).fetchall()
     return render_template('categorieen.html', categorieen=cats)
 
-@app.route('/categorie/<int:cid>/verwijder', methods=['POST'])
+@app.route('/categorie/<int:cid>/verwijder'
+@login_required, methods=['POST'])
 def verwijder_categorie(cid):
     db = get_db()
     db.execute('UPDATE spreuk SET categorie_id=NULL WHERE categorie_id=?', (cid,))
@@ -209,6 +232,7 @@ def verwijder_categorie(cid):
     return redirect(url_for('categorieen'))
 
 @app.route('/export/csv')
+@login_required
 def export_csv():
     db = get_db()
     rows = db.execute('''SELECT s.tekst_nl, s.tekst_en, s.auteur, s.bron, s.origine,
@@ -228,6 +252,7 @@ def export_csv():
                      download_name='spreuken_export.csv')
 
 @app.route('/export/json')
+@login_required
 def export_json():
     db = get_db()
     rows = db.execute('''SELECT s.*, c.naam as categorie_naam
