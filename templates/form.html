@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}{{ actie }} spreuk{% endblock %}
+{% block inhoud %}
+<h2 style="margin-bottom:1.25rem;font-size:20px">{{ actie }} spreuk</h2>
+<div class="card">
+<form method="post">
+  <div class="form-grid">
+    <div class="veld vol">
+      <label>Spreuk (Nederlands) *</label>
+      <textarea name="tekst_nl" required>{{ spreuk.tekst_nl if spreuk else '' }}</textarea>
+    </div>
+    <div class="veld vol">
+      <label>Spreuk (Engels)</label>
+      <textarea name="tekst_en">{{ spreuk.tekst_en if spreuk and spreuk.tekst_en else '' }}</textarea>
+    </div>
+    <div class="veld">
+      <label>Auteur / spreker</label>
+      <input type="text" name="auteur" value="{{ spreuk.auteur if spreuk and spreuk.auteur else '' }}" placeholder="bijv. Albert Einstein">
+    </div>
+    <div class="veld">
+      <label>Bron (boek, toespraak, etc.)</label>
+      <input type="text" name="bron" value="{{ spreuk.bron if spreuk and spreuk.bron else '' }}" placeholder="bijv. Relativity, 1916">
+    </div>
+    <div class="veld">
+      <label>Origine (land, periode, context)</label>
+      <input type="text" name="origine" value="{{ spreuk.origine if spreuk and spreuk.origine else '' }}" placeholder="bijv. Duitsland, 20e eeuw">
+    </div>
+    <div class="veld">
+      <label>Taal origineel</label>
+      <select name="taal_origineel">
+        {% for code, naam in [('nl','Nederlands'),('en','Engels'),('de','Duits'),('fr','Frans'),('la','Latijn'),('anders','Anders')] %}
+        <option value="{{ code }}" {% if spreuk and spreuk.taal_origineel == code %}selected{% elif not spreuk and code == 'nl' %}selected{% endif %}>{{ naam }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="veld">
+      <label>Categorie</label>
+      <select name="categorie_id">
+        <option value="">— geen —</option>
+        {% for c in categorieen %}
+        <option value="{{ c.id }}" {% if spreuk and spreuk.categorie_id == c.id %}selected{% endif %}>{{ c.naam }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="veld">
+      <label>Datum toegevoegd</label>
+      <input type="date" name="datum_toegevoegd" value="{{ spreuk.datum_toegevoegd if spreuk and spreuk.datum_toegevoegd else '' }}">
+    </div>
+    <div class="veld vol">
+      <label>Tags (kommagescheiden)</label>
+      <input type="text" name="tags" value="{{ tags_str if tags_str is defined else '' }}" placeholder="bijv. wijsheid, leven, klassiek">
+    </div>
+    <div class="veld vol">
+      <label>Persoonlijke notitie</label>
+      <textarea name="notitie">{{ spreuk.notitie if spreuk and spreuk.notitie else '' }}</textarea>
+    </div>
+    <div class="veld vol">
+      <div class="check-rij">
+        <input type="checkbox" name="favoriet" id="fav" value="1" {% if spreuk and spreuk.favoriet %}checked{% endif %}>
+        <label for="fav">&#9733; Favoriet markeren</label>
+      </div>
+    </div>
+  </div>
+  <div style="display:flex;gap:.75rem;margin-top:1.25rem">
+    <button type="submit" class="btn btn-primair">{{ actie }}</button>
+    <a href="{{ url_for('index') }}" class="btn">Annuleren</a>
+  </div>
+</form>
+</div>
+{% endblock %}

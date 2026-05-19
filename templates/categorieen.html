@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Categorieën{% endblock %}
+{% block inhoud %}
+<h2 style="margin-bottom:1.25rem;font-size:20px">Categorieën beheren</h2>
+<div class="cat-grid" style="margin-bottom:1.5rem">
+  {% for c in categorieen %}
+  <div class="cat-card">
+    <div class="naam">{{ c.naam }}</div>
+    <div class="beschr">{{ c.beschrijving or '' }}</div>
+    <div class="teller">{{ c.aantal }} spreuk{% if c.aantal != 1 %}en{% endif %}</div>
+    <form method="post" action="{{ url_for('verwijder_categorie', cid=c.id) }}"
+          style="margin-top:.6rem" onsubmit="return confirm('Categorie verwijderen? Spreuken blijven behouden.')">
+      <button type="submit" class="btn btn-klein btn-gevaar">Verwijder</button>
+    </form>
+  </div>
+  {% endfor %}
+</div>
+<div class="card" style="max-width:480px">
+  <h3 style="font-size:16px;margin-bottom:.9rem">Nieuwe categorie</h3>
+  <form method="post">
+    <div class="veld" style="margin-bottom:.75rem">
+      <label>Naam *</label>
+      <input type="text" name="naam" required placeholder="bijv. Politiek">
+    </div>
+    <div class="veld" style="margin-bottom:.75rem">
+      <label>Beschrijving</label>
+      <input type="text" name="beschrijving" placeholder="Korte omschrijving">
+    </div>
+    <button type="submit" class="btn btn-primair">Toevoegen</button>
+  </form>
+</div>
+{% endblock %}

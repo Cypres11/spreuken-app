@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Collectie{% endblock %}
+{% block inhoud %}
+
+<div class="stats">
+  <div class="stat"><div class="getal">{{ totaal }}</div><div class="label">spreuken totaal</div></div>
+  <div class="stat"><div class="getal">{{ favorieten }}</div><div class="label">favorieten &#9733;</div></div>
+  <div class="stat"><div class="getal">{{ categorieen|length }}</div><div class="label">categorieën</div></div>
+  <div class="stat"><div class="getal">{{ spreuken|length }}</div><div class="label">resultaten nu</div></div>
+</div>
+
+{% if dagelijks and not q and not cat_id and not only_fav and not taal %}
+<div class="dagelijks">
+  <div style="font-size:11px;color:#185fa5;font-weight:bold;margin-bottom:.4rem;text-transform:uppercase;letter-spacing:.5px">&#10024; Spreuk van de dag</div>
+  <blockquote>"{{ dagelijks.tekst_nl }}"</blockquote>
+  {% if dagelijks.tekst_en %}<div class="en">&#127482;&#127480; "{{ dagelijks.tekst_en }}"</div>{% endif %}
+  <div class="meta">
+    {% if dagelijks.auteur %}— {{ dagelijks.auteur }}{% endif %}
+    {% if dagelijks.categorie_naam %} &nbsp;&#183;&nbsp; <span class="badge">{{ dagelijks.categorie_naam }}</span>{% endif %}
+  </div>
+</div>
+{% endif %}
+
+<form method="get" class="filter-balk">
+  <input type="text" name="q" placeholder="Zoeken…" value="{{ q }}">
+  <select name="cat">
+    <option value="">Alle categorieën</option>
+    {% for c in categorieen %}
+    <option value="{{ c.id }}" {% if cat_id|string == c.id|string %}selected{% endif %}>{{ c.naam }}</option>
+    {% endfor %}
+  </select>
+  <select name="taal">
+    <option value="">Alle talen</option>
+    <option value="nl" {% if taal=='nl' %}selected{% endif %}>Nederlands</option>
+    <option value="en" {% if taal=='en' %}selected{% endif %}>Engels</option>
+    <option value="de" {% if taal=='de' %}selected{% endif %}>Duits</option>
+    <option value="fr" {% if taal=='fr' %}selected{% endif %}>Frans</option>
+    <option value="la" {% if taal=='la' %}selected{% endif %}>Latijn</option>
+    <option value="anders" {% if taal=='anders' %}selected{% endif %}>Anders</option>
+  </select>
+  <label style="font-size:14px;display:flex;align-items:center;gap:.3rem;cursor:pointer">
+    <input type="checkbox" name="fav" value="1" {% if only_fav %}checked{% endif %}> Alleen favorieten
+  </label>
+  <button type="submit" class="btn btn-primair">Zoeken</button>
+  <a href="{{ url_for('index') }}" class="btn">Wis</a>
+</form>
+
+{% if spreuken %}
+<table>
+  <thead><tr>
+    <th style="width:32px"></th>
+    <th>Spreuk</th>
+    <th>Auteur</th>
+    <th>Categorie</th>
+    <th>Taal</th>
+    <th>Origine</th>
+    <th>Datum</th>
+    <th style="width:100px"></th>
+  </tr></thead>
+  <tbody>
+  {% for s in spreuken %}
+  <tr>
+    <td>
+      <button class="fav-btn" onclick="toggleFav({{ s.id }}, this)" title="Favoriet aan/uit">
+        {{ '⭐' if s.favoriet else '☆' }}
+      </button>
+    </td>
+    <td>
+      <div class="tekst-spreuk">"{{ s.tekst_nl }}"</div>
+      {% if s.tekst_en %}<div class="tekst-en">EN: "{{ s.tekst_en }}"</div>{% endif %}
+      {% if s.notitie %}<div style="font-size:11px;color:#888780;margin-top:3px">&#128203; {{ s.notitie }}</div>{% endif %}
+    </td>
+    <td style="white-space:nowrap">{{ s.auteur or '—' }}</td>
+    <td>{% if s.categorie_naam %}<span class="badge">{{ s.categorie_naam }}</span>{% else %}—{% endif %}</td>
+    <td style="font-size:12px">{{ s.taal_origineel or '—' }}</td>
+    <td style="font-size:12px;max-width:120px">{{ s.origine or '—' }}</td>
+    <td style="font-size:12px;white-space:nowrap">{{ s.datum_toegevoegd or '—' }}</td>
+    <td>
+      <div class="acties">
+        <a href="{{ url_for('bewerk', sid=s.id) }}" class="btn btn-klein">&#9998;</a>
+        <form method="post" action="{{ url_for('verwijder', sid=s.id) }}"
+              onsubmit="return confirm('Spreuk verwijderen?')">
+          <button type="submit" class="btn btn-klein btn-gevaar">&#128465;</button>
+        </form>
+      </div>
+    </td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="card" style="text-align:center;padding:2rem;color:#888780">
+  Geen spreuken gevonden.
+  <a href="{{ url_for('nieuw') }}">Voeg er een toe!</a>
+</div>
+{% endif %}
+
+<script>
+async function toggleFav(id, btn) {
+  const r = await fetch(`/spreuk/${id}/favoriet`, {method:'POST'});
+  if (r.ok) btn.textContent = btn.textContent.trim() === '☆' ? '⭐' : '☆';
+}
+</script>
+{% endblock %}

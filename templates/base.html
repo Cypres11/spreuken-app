@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Spreuken{% endblock %} — RFB Consult</title>
+<style>
+  :root {
+    --blauw: #185fa5;
+    --blauw-licht: #e6f1fb;
+    --blauw-donker: #0c447c;
+    --tekst: #2c2c2a;
+    --tekst-zacht: #5f5e5a;
+    --achtergrond: #f8f7f4;
+    --vlak: #ffffff;
+    --rand: #d3d1c7;
+    --goud: #ba7517;
+    --groen: #3b6d11;
+    --rood: #a32d2d;
+    --amber-licht: #faeeda;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: var(--achtergrond); color: var(--tekst); font-size: 15px; line-height: 1.6; }
+  a { color: var(--blauw); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* Nav */
+  nav { background: var(--blauw); color: white; padding: 0 1.5rem; display: flex; align-items: center; gap: 1.5rem; height: 52px; }
+  nav .brand { font-size: 17px; font-weight: bold; color: white; letter-spacing: .3px; }
+  nav .brand span { color: #FAC775; }
+  nav a.nav-link { color: rgba(255,255,255,.85); font-size: 14px; padding: .25rem .5rem; border-radius: 4px; }
+  nav a.nav-link:hover { background: rgba(255,255,255,.15); text-decoration: none; color: white; }
+  nav .spacer { flex: 1; }
+
+  /* Flash */
+  .flash { padding: .6rem 1rem; margin: .75rem 1.5rem 0; border-radius: 6px; font-size: 14px; }
+  .flash.success { background: #eaf3de; color: #27500a; border: 1px solid #97c459; }
+  .flash.info    { background: #e6f1fb; color: #0c447c; border: 1px solid #85b7eb; }
+
+  /* Layout */
+  .container { max-width: 1100px; margin: 0 auto; padding: 1.5rem; }
+
+  /* Cards */
+  .card { background: var(--vlak); border: 1px solid var(--rand); border-radius: 8px; padding: 1rem 1.25rem; }
+
+  /* Stat bar */
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: .75rem; margin-bottom: 1.25rem; }
+  .stat { background: var(--vlak); border: 1px solid var(--rand); border-radius: 8px; padding: .75rem 1rem; }
+  .stat .getal { font-size: 26px; font-weight: bold; color: var(--blauw); }
+  .stat .label { font-size: 12px; color: var(--tekst-zacht); margin-top: 2px; }
+
+  /* Dagelijkse spreuk */
+  .dagelijks { background: var(--blauw-licht); border: 1px solid #85b7eb; border-radius: 8px; padding: 1rem 1.25rem; margin-bottom: 1.25rem; }
+  .dagelijks blockquote { font-style: italic; font-size: 16px; color: var(--blauw-donker); margin-bottom: .4rem; }
+  .dagelijks .meta { font-size: 12px; color: var(--tekst-zacht); }
+  .dagelijks .en { font-size: 13px; color: var(--tekst-zacht); margin-top: .3rem; font-style: italic; }
+
+  /* Filter balk */
+  .filter-balk { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1rem; align-items: center; }
+  .filter-balk input[type=text], .filter-balk select {
+    padding: .4rem .7rem; border: 1px solid var(--rand); border-radius: 6px;
+    font-size: 14px; background: var(--vlak); color: var(--tekst);
+  }
+  .filter-balk input[type=text] { width: 220px; }
+  .btn { display: inline-flex; align-items: center; gap: .3rem; padding: .4rem .9rem; border-radius: 6px;
+    font-size: 14px; cursor: pointer; border: 1px solid var(--rand); background: var(--vlak);
+    color: var(--tekst); text-decoration: none; }
+  .btn:hover { background: #f1efe8; text-decoration: none; }
+  .btn-primair { background: var(--blauw); color: white; border-color: var(--blauw-donker); }
+  .btn-primair:hover { background: var(--blauw-donker); }
+  .btn-klein { padding: .25rem .55rem; font-size: 12px; }
+  .btn-gevaar { border-color: var(--rood); color: var(--rood); }
+  .btn-gevaar:hover { background: #fcebeb; }
+
+  /* Spreuk tabel */
+  table { width: 100%; border-collapse: collapse; background: var(--vlak); border-radius: 8px; overflow: hidden; border: 1px solid var(--rand); }
+  th { background: #f1efe8; font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: .5px; color: var(--tekst-zacht); padding: .6rem .9rem; text-align: left; border-bottom: 1px solid var(--rand); }
+  td { padding: .65rem .9rem; vertical-align: top; border-bottom: 1px solid #ebe9e0; font-size: 14px; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #fafaf7; }
+  .tekst-spreuk { font-style: italic; max-width: 320px; }
+  .tekst-en { font-size: 12px; color: var(--tekst-zacht); margin-top: 3px; font-style: normal; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; background: var(--blauw-licht); color: var(--blauw-donker); }
+  .fav-btn { background: none; border: none; cursor: pointer; font-size: 16px; padding: 0; line-height: 1; }
+  .acties { display: flex; gap: .4rem; flex-wrap: nowrap; }
+
+  /* Formulier */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .form-grid .vol { grid-column: 1 / -1; }
+  .veld label { display: block; font-size: 13px; font-weight: bold; color: var(--tekst-zacht); margin-bottom: 4px; }
+  .veld input, .veld select, .veld textarea {
+    width: 100%; padding: .45rem .7rem; border: 1px solid var(--rand); border-radius: 6px;
+    font-size: 14px; font-family: Arial, sans-serif; color: var(--tekst); background: var(--vlak);
+  }
+  .veld textarea { min-height: 80px; resize: vertical; }
+  .veld input:focus, .veld select:focus, .veld textarea:focus {
+    outline: 2px solid var(--blauw); border-color: var(--blauw);
+  }
+  .check-rij { display: flex; align-items: center; gap: .5rem; margin-top: .3rem; font-size: 14px; }
+
+  /* Categorie pagina */
+  .cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); gap: .75rem; }
+  .cat-card { background: var(--vlak); border: 1px solid var(--rand); border-radius: 8px; padding: .9rem 1rem; }
+  .cat-card .naam { font-weight: bold; font-size: 15px; color: var(--blauw-donker); }
+  .cat-card .beschr { font-size: 12px; color: var(--tekst-zacht); margin: 4px 0; }
+  .cat-card .teller { font-size: 12px; color: var(--goud); }
+</style>
+</head>
+<body>
+<nav>
+  <span class="brand" style="display:flex;align-items:center;gap:7px;">
+    <svg width="22" height="26" viewBox="0 0 32 36" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">
+      <defs>
+        <radialGradient id="og" cx="38%" cy="45%" r="55%">
+          <stop offset="0%"   stop-color="#FCDE5A"/>
+          <stop offset="35%"  stop-color="#EF9F27"/>
+          <stop offset="70%"  stop-color="#BA7517"/>
+          <stop offset="100%" stop-color="#633806"/>
+        </radialGradient>
+        <radialGradient id="os" cx="30%" cy="28%" r="40%">
+          <stop offset="0%"  stop-color="#FFF8DC" stop-opacity="0.55"/>
+          <stop offset="100%" stop-color="#FFF8DC" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      <path d="M16 1 C16 1,28 14,28 22 C28 29.7 22.6 35 16 35 C9.4 35 4 29.7 4 22 C4 14 16 1 16 1Z" fill="url(#og)"/>
+      <path d="M16 1 C16 1,28 14,28 22 C28 29.7 22.6 35 16 35 C9.4 35 4 29.7 4 22 C4 14 16 1 16 1Z" fill="url(#os)"/>
+      <ellipse cx="11" cy="15" rx="3" ry="5" fill="white" opacity="0.22" transform="rotate(-20,11,15)"/>
+    </svg>
+    Spreuk<span>DB</span>
+  </span>
+  <a class="nav-link" href="{{ url_for('index') }}">&#128218; Collectie</a>
+  <a class="nav-link" href="{{ url_for('nieuw') }}">&#43; Nieuw</a>
+  <a class="nav-link" href="{{ url_for('categorieen') }}">&#127991; Categorieën</a>
+  <span class="spacer"></span>
+  <a class="nav-link" href="{{ url_for('export_csv') }}">&#8659; CSV</a>
+  <a class="nav-link" href="{{ url_for('export_json') }}">&#8659; JSON</a>
+</nav>
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% for cat, msg in messages %}
+    <div class="flash {{ cat }}">{{ msg }}</div>
+  {% endfor %}
+{% endwith %}
+<div class="container">{% block inhoud %}{% endblock %}</div>
+</body>
+</html>
