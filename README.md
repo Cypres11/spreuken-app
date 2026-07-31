@@ -1,6 +1,6 @@
 # SpreukDB — RFB Consult
 
-Flask + SQLite applicatie voor het beheren van een persoonlijke spreukencollectie.
+Flask + SQLite applicatie voor het beheren van een persoonlijke spreukencollectie. Met wachtwoord bescherming.
 
 ## Installatie
 
